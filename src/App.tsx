@@ -17,7 +17,6 @@ import {
   Tabs,
   Tab,
   Paper,
-  TextField,
 } from "@mui/material";
 import { Calendar, FileText, Eye, Upload } from "lucide-react";
 import { LessonMetadataPanel } from "./components/lesson-metadata-panel";
@@ -26,12 +25,14 @@ import { JsonPreview } from "./components/json-preview";
 import { FileUpload } from "./components/file-upload";
 import { ExportControls } from "./components/export-controls";
 import type { WeekSchema } from "./types/lesson-schema";
-import { mockApiService } from "./services/api";
 import {
   detectDayFromContent,
   parseMarkdownByHeadings,
   sanitizeWeekDataDownload,
 } from "./utils/markdown-utils";
+import { importLesson } from "./components/api/api";
+import JsonImport from "./components/json-import";
+import PreviewPane from "./components/preview-pane";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -164,6 +165,16 @@ export default function App() {
     severity: "info",
   });
 
+  const handleJsonPopulate = useCallback((importedData: WeekSchema) => {
+    setWeekData(importedData);
+    setNotification({
+      open: true,
+      message: "Lesson JSON imported successfully",
+      severity: "success",
+    });
+    setCurrentTab(1); // switch to the Days & Sections view
+  }, []);
+
   // Auto-generate ID from week end date
   const updateWeekEndDate = useCallback((date: string) => {
     setWeekData((prev) => ({
@@ -178,9 +189,9 @@ export default function App() {
 
   // Handle file upload and parse content
   const handleFileUpload = useCallback(
-    (content: string, filename: string, file?: File) => {
+    (content: string, filename: string, file: File) => {
       try {
-        // Store the raw PDF File for later import
+        // Capture the uploaded PDF File reference
         if (file) {
           setPdfFile(file);
         } else {
@@ -251,11 +262,8 @@ export default function App() {
             days: freshDays,
           };
           localStorage.setItem("weekData", JSON.stringify(newWeekData));
-          console.log("Loaded new week data:", newWeekData);
           return newWeekData;
         });
-
-        console.log("Stored PDF for import:", pdfFile);
 
         setNotification({
           open: true,
@@ -359,27 +367,45 @@ export default function App() {
       });
       return;
     }
+
+    if (!pdfFile) {
+      setNotification({
+        open: true,
+        message: "No PDF file selected. Please upload a PDF before submitting.",
+        severity: "error",
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
-      const sanitized = sanitizeWeekDataDownload(weekData);
-      await mockApiService.submitLesson(sanitized);
+      // Use the importLesson API helper
+      const year = weekData.year;
+      const quarter = weekData.quarter;
+      const lessonNumber = String(weekData.lesson_number);
+      const result = await importLesson(
+        year,
+        quarter,
+        lessonNumber,
+        weekData,
+        pdfFile
+      );
       setNotification({
         open: true,
-        message: "Successfully submitted to backend",
+        message: `Import successful: ${result.message}`,
         severity: "success",
       });
-    } catch (error) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
       setNotification({
         open: true,
-        message: `Failed to submit: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`,
+        message: `Import failed: ${error.message || "Unknown error"}`,
         severity: "error",
       });
     } finally {
       setIsLoading(false);
     }
-  }, [weekData, validateWeekData]);
+  }, [weekData, validateWeekData, pdfFile]);
 
   const totalDaysWithContent = weekData.days.filter((day) =>
     day?.rawMarkdown?.trim()
@@ -442,6 +468,8 @@ export default function App() {
                 onFileUpload={handleFileUpload}
                 onJsonImport={handleJsonImport}
               />
+
+              <JsonImport onJsonImport={handleJsonPopulate} />
             </Grid>
           </Grid>
         </TabPanel>
@@ -479,24 +507,7 @@ export default function App() {
           <Typography variant="h6" gutterBottom>
             Raw Markdown Content - Complete Lesson
           </Typography>
-          <TextField
-            fullWidth
-            multiline
-            rows={12}
-            value={rawMarkdown}
-            onChange={(e) => handleFileUpload(e.target.value, "raw-content.md")}
-            variant="outlined"
-            sx={{
-              "& .MuiInputBase-input": {
-                fontFamily: 'Monaco, Consolas, "Courier New", monospace',
-                fontSize: "14px",
-                lineHeight: 1.5,
-              },
-              "& .MuiOutlinedInput-root": {
-                bgcolor: "white",
-              },
-            }}
-          />
+          <PreviewPane content={rawMarkdown} />
         </Paper>
       </Container>
 

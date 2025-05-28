@@ -226,9 +226,6 @@ export function MarkdownParser({
     const lessonTitleHeading = parsedStructure.headings.find(
       (h) => h.level === 2
     );
-    if (lessonTitleHeading) {
-      console.log("Detected lesson title:", lessonTitleHeading.text);
-    }
 
     // Create splits at H3 headings which indicate daily sections
     parsedStructure.headings.forEach((heading) => {

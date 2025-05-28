@@ -55,7 +55,6 @@ export function parseMarkdownByHeadings(markdown: string): ParsedSection[] {
     sections.push(currentSection);
   }
 
-  console.log("Parsed sections:", sections);
   return sections;
 }
 

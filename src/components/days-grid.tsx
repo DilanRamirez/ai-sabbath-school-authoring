@@ -165,8 +165,8 @@ export function DaysGrid({ weekData, onUpdateWeekData }: DaysGridProps) {
 
                 {expandedDays.has(dayIndex) && (
                   <CardContent>
-                    <Grid container spacing={2} sx={{ mb: 3 }}>
-                      <Grid>
+                    <Grid container spacing={2} sx={{ mb: 3, width: "100%" }}>
+                      <Grid item xs={12} sm={4}>
                         <TextField
                           fullWidth
                           label="Date"
@@ -179,7 +179,7 @@ export function DaysGrid({ weekData, onUpdateWeekData }: DaysGridProps) {
                           required
                         />
                       </Grid>
-                      <Grid>
+                      <Grid item xs={12} sm={4}>
                         <FormControl fullWidth>
                           <InputLabel>Type</InputLabel>
                           <Select
@@ -201,7 +201,7 @@ export function DaysGrid({ weekData, onUpdateWeekData }: DaysGridProps) {
                           </Select>
                         </FormControl>
                       </Grid>
-                      <Grid>
+                      <Grid item xs={12} sm={4}>
                         <TextField
                           fullWidth
                           label="Day Title"

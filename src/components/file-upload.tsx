@@ -16,7 +16,7 @@ import { data } from "./data";
 import { parsePdf } from "./api/api";
 
 interface FileUploadProps {
-  onFileUpload: (content: string, filename: string) => void;
+  onFileUpload: (content: string, filename: string, file: File) => void;
   onJsonImport: (content: string) => void;
 }
 
@@ -47,8 +47,7 @@ export function FileUpload({ onFileUpload, onJsonImport }: FileUploadProps) {
         setIsProcessing(true);
         try {
           const result = await parsePdf(file);
-          console.log("PDF converted to Markdown:", result);
-          onFileUpload(result, `${file.name} (converted to Markdown)`);
+          onFileUpload(result, `${file.name} (converted to Markdown)`, file);
           setError(null);
         } catch (error) {
           setError(
@@ -69,7 +68,7 @@ export function FileUpload({ onFileUpload, onJsonImport }: FileUploadProps) {
         if (isJson) {
           onJsonImport(content);
         } else {
-          onFileUpload(content, file.name);
+          onFileUpload(content, file.name, file);
         }
         setError(null);
       };
@@ -112,7 +111,11 @@ export function FileUpload({ onFileUpload, onJsonImport }: FileUploadProps) {
 
   // Demo button to load mock data
   const loadMockData = useCallback(() => {
-    onFileUpload(MOCK_PDF_TO_MARKDOWN, "lesson-8-mock.md");
+    onFileUpload(
+      MOCK_PDF_TO_MARKDOWN,
+      "lesson-8-mock.md",
+      new File([MOCK_PDF_TO_MARKDOWN], "lesson-8-mock.md")
+    );
   }, [onFileUpload]);
 
   return (

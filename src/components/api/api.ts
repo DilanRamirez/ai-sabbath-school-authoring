@@ -26,14 +26,14 @@ export async function parsePdf(file: File): Promise<string> {
  * Imports a cleaned lesson JSON and its PDF into the backend.
  * @param year e.g. "2025"
  * @param quarter e.g. "Q2"
- * @param lessonId e.g. "lesson-08"
+ * @param lessonNumber e.g. "8"
  * @param lessonData fully formed lesson object conforming to your schema
  * @param pdfFile the original PDF file for this lesson
  */
 export async function importLesson(
   year: string,
   quarter: string,
-  lessonId: string,
+  lessonNumber: string,
   lessonData: unknown,
   pdfFile: File
 ): Promise<{ status: string; message: string }> {
@@ -42,13 +42,10 @@ export async function importLesson(
   form.append("lesson_data", JSON.stringify(lessonData));
   form.append("pdf", pdfFile);
 
-  const endpoint = `/lessons/${year}/${quarter}/${lessonId}/import`;
+  const endpoint = `/lessons/${year}/${quarter}/lesson-${lessonNumber}/import`;
   const response = await api.post<{ status: string; message: string }>(
     endpoint,
-    form,
-    {
-      headers: { "Content-Type": "multipart/form-data" },
-    }
+    form
   );
 
   return response.data;
