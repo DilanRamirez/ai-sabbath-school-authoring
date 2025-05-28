@@ -8,11 +8,10 @@ import {
   Button,
   Paper,
   Alert,
-  Tabs,
-  Tab,
   LinearProgress,
+  Container,
 } from "@mui/material";
-import { Upload, FileText, Code, FileImage } from "lucide-react";
+import { Upload, FileImage } from "lucide-react";
 import { data } from "./data";
 import { parsePdf } from "./api/api";
 
@@ -27,7 +26,6 @@ const MOCK_PDF_TO_MARKDOWN = data;
 export function FileUpload({ onFileUpload, onJsonImport }: FileUploadProps) {
   const [dragActive, setDragActive] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [uploadTab, setUploadTab] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
 
   const handleFile = useCallback(
@@ -118,21 +116,7 @@ export function FileUpload({ onFileUpload, onJsonImport }: FileUploadProps) {
   }, [onFileUpload]);
 
   return (
-    <Box>
-      <Typography variant="h6" gutterBottom>
-        Upload Content
-      </Typography>
-
-      <Tabs
-        value={uploadTab}
-        onChange={(_, newValue) => setUploadTab(newValue)}
-        sx={{ mb: 2 }}
-      >
-        <Tab icon={<FileImage />} label="PDF" />
-        <Tab icon={<FileText />} label="Markdown" />
-        <Tab icon={<Code />} label="JSON Import" />
-      </Tabs>
-
+    <Container maxWidth="xl" sx={{ mt: 2, p: 2 }} component={Paper}>
       {error && (
         <Alert severity="error" sx={{ mb: 2 }}>
           {error}
@@ -168,37 +152,15 @@ export function FileUpload({ onFileUpload, onJsonImport }: FileUploadProps) {
         onDrop={handleDrop}
         onClick={() => document.getElementById("file-input")?.click()}
       >
-        {uploadTab === 0 ? (
-          <>
-            <FileImage size={48} color="#666" style={{ marginBottom: 16 }} />
-            <Typography variant="h6" gutterBottom>
-              Drop your PDF file here
-            </Typography>
-            <Typography variant="body2" color="text.secondary" gutterBottom>
-              PDF will be converted to Markdown automatically
-            </Typography>
-          </>
-        ) : uploadTab === 1 ? (
-          <>
-            <FileText size={48} color="#666" style={{ marginBottom: 16 }} />
-            <Typography variant="h6" gutterBottom>
-              Drop your Markdown file here
-            </Typography>
-            <Typography variant="body2" color="text.secondary" gutterBottom>
-              Raw Markdown from PDF conversion
-            </Typography>
-          </>
-        ) : (
-          <>
-            <Code size={48} color="#666" style={{ marginBottom: 16 }} />
-            <Typography variant="h6" gutterBottom>
-              Import existing lesson JSON
-            </Typography>
-            <Typography variant="body2" color="text.secondary" gutterBottom>
-              Re-import previously exported lesson data
-            </Typography>
-          </>
-        )}
+        <>
+          <FileImage size={48} color="#666" style={{ marginBottom: 16 }} />
+          <Typography variant="h6" gutterBottom>
+            Drop your PDF file here
+          </Typography>
+          <Typography variant="body2" color="text.secondary" gutterBottom>
+            PDF will be converted to Markdown automatically
+          </Typography>
+        </>
 
         <Button
           variant="contained"
@@ -212,13 +174,7 @@ export function FileUpload({ onFileUpload, onJsonImport }: FileUploadProps) {
         <input
           id="file-input"
           type="file"
-          accept={
-            uploadTab === 0
-              ? ".pdf"
-              : uploadTab === 1
-              ? ".md,.markdown"
-              : ".json"
-          }
+          accept=".pdf"
           onChange={handleFileInput}
           style={{ display: "none" }}
         />
@@ -229,15 +185,22 @@ export function FileUpload({ onFileUpload, onJsonImport }: FileUploadProps) {
         color="text.secondary"
         sx={{ mt: 1, display: "block" }}
       >
-        {uploadTab === 0
-          ? "Upload PDF files to automatically convert to structured Markdown"
-          : uploadTab === 1
-          ? "Upload raw Markdown content to begin structuring your lesson"
-          : "Import a previously exported lesson JSON to continue editing"}
+        Upload PDF files to automatically convert to structured Markdown
       </Typography>
 
       {/* Demo Section */}
-      <Box sx={{ mt: 3, p: 2, bgcolor: "info.50", borderRadius: 1 }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          flexDirection: "column",
+          mt: 3,
+          p: 2,
+          bgcolor: "info.50",
+          borderRadius: 1,
+        }}
+      >
         <Typography variant="subtitle2" gutterBottom color="info.main">
           Demo Mode
         </Typography>
@@ -245,15 +208,17 @@ export function FileUpload({ onFileUpload, onJsonImport }: FileUploadProps) {
           Try the tool with sample lesson content from Lesson 8: "En los Salmos
           - Primera Parte"
         </Typography>
-        <Button
-          variant="outlined"
-          size="small"
-          onClick={loadMockData}
-          color="info"
-        >
-          Load Sample Lesson
-        </Button>
+        <Box>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={loadMockData}
+            color="info"
+          >
+            Load Sample Lesson
+          </Button>
+        </Box>
       </Box>
-    </Box>
+    </Container>
   );
 }

@@ -2,6 +2,7 @@
 
 import type React from "react";
 import { useState, useCallback, useEffect } from "react";
+const LAYOUT_SPACING = 2;
 import {
   Box,
   Container,
@@ -42,7 +43,7 @@ function TabPanel(props: TabPanelProps) {
   const { children, value, index, ...other } = props;
   return (
     <div role="tabpanel" hidden={value !== index} {...other}>
-      {value === index && <Box sx={{ py: 3 }}>{children}</Box>}
+      {value === index && <Box sx={{ p: LAYOUT_SPACING }}>{children}</Box>}
     </div>
   );
 }
@@ -51,6 +52,8 @@ const defaultWeekData: WeekSchema = {
   id: "",
   lesson_number: 1,
   title: "",
+  quarter: "",
+  year: "",
   week_range: {
     start: "",
     end: "",
@@ -134,6 +137,9 @@ export default function App() {
     return defaultWeekData;
   });
 
+  // New state for storing PDF file
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
+
   // Load rawMarkdown from localStorage on mount
   useEffect(() => {
     const storedMarkdown = localStorage.getItem("rawMarkdown");
@@ -172,9 +178,15 @@ export default function App() {
 
   // Handle file upload and parse content
   const handleFileUpload = useCallback(
-    (content: string, filename: string) => {
+    (content: string, filename: string, file?: File) => {
       try {
-        // delete previous rawMarkdown from localStorage
+        // Store the raw PDF File for later import
+        if (file) {
+          setPdfFile(file);
+        } else {
+          setPdfFile(null);
+        }
+        // Remove any previous rawMarkdown and weekData
         localStorage.removeItem("rawMarkdown");
         localStorage.removeItem("weekData");
 
@@ -243,6 +255,8 @@ export default function App() {
           return newWeekData;
         });
 
+        console.log("Stored PDF for import:", pdfFile);
+
         setNotification({
           open: true,
           message: `Successfully loaded ${filename}. Content has been split into daily sections. Switch to "Days & Sections" tab to review.`,
@@ -261,7 +275,7 @@ export default function App() {
         });
       }
     },
-    [weekData.days]
+    [weekData.days, pdfFile]
   );
 
   // Handle JSON import
@@ -396,11 +410,16 @@ export default function App() {
 
       {isLoading && <LinearProgress />}
 
-      <Container maxWidth="xl" sx={{ py: 3 }}>
-        <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 3 }}>
+      <Container maxWidth="xl" sx={{ p: LAYOUT_SPACING }}>
+        <Box
+          sx={{ borderBottom: 1, borderColor: "divider", mb: { xs: 2, sm: 3 } }}
+        >
           <Tabs
             value={currentTab}
             onChange={(_, newValue) => setCurrentTab(newValue)}
+            variant="scrollable"
+            scrollButtons="auto"
+            aria-label="Responsive Tabs"
           >
             <Tab icon={<Upload />} label="Upload & Metadata" />
             <Tab icon={<Calendar />} label="Days & Sections" />
@@ -410,7 +429,7 @@ export default function App() {
         </Box>
 
         <TabPanel value={currentTab} index={0}>
-          <Grid container spacing={3}>
+          <Grid container spacing={LAYOUT_SPACING}>
             <Grid>
               <LessonMetadataPanel
                 weekData={weekData}
@@ -418,7 +437,7 @@ export default function App() {
                 onUpdateWeekEndDate={updateWeekEndDate}
               />
             </Grid>
-            <Grid>
+            <Grid sx={{ width: "100%" }}>
               <FileUpload
                 onFileUpload={handleFileUpload}
                 onJsonImport={handleJsonImport}
@@ -450,7 +469,7 @@ export default function App() {
 
         <Paper
           sx={{
-            p: 2,
+            p: LAYOUT_SPACING,
             bgcolor: "grey.50",
             border: "1px solid",
             borderColor: "grey.300",

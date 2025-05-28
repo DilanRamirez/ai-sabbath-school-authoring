@@ -78,6 +78,8 @@ export interface WeekRange {
 
 export interface WeekSchema {
   id: string;
+  quarter: string;
+  year: string;
   lesson_number: number;
   title: string;
   week_range: WeekRange;
