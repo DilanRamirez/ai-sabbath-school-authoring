@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import {
   Box,
   Container,
@@ -46,73 +46,105 @@ function TabPanel(props: TabPanelProps) {
   );
 }
 
+const defaultWeekData: WeekSchema = {
+  id: "",
+  lesson_number: 1,
+  title: "",
+  week_range: {
+    start: "",
+    end: "",
+  },
+  memory_verse: {
+    text: "",
+    reference: "",
+  },
+  days: [
+    {
+      day: "Sábado",
+      date: "",
+      type: "introduction",
+      title: "Introducción",
+      rawMarkdown: "",
+      sections: [],
+    },
+    {
+      day: "Domingo",
+      date: "",
+      type: "devotional",
+      title: "",
+      rawMarkdown: "",
+      sections: [],
+    },
+    {
+      day: "Lunes",
+      date: "",
+      type: "devotional",
+      title: "",
+      rawMarkdown: "",
+      sections: [],
+    },
+    {
+      day: "Martes",
+      date: "",
+      type: "devotional",
+      title: "",
+      rawMarkdown: "",
+      sections: [],
+    },
+    {
+      day: "Miércoles",
+      date: "",
+      type: "devotional",
+      title: "",
+      rawMarkdown: "",
+      sections: [],
+    },
+    {
+      day: "Jueves",
+      date: "",
+      type: "devotional",
+      title: "",
+      rawMarkdown: "",
+      sections: [],
+    },
+    {
+      day: "Viernes",
+      date: "",
+      type: "review",
+      title: "PARA ESTUDIAR Y MEDITAR",
+      rawMarkdown: "",
+      sections: [],
+    },
+  ],
+};
+
 export default function App() {
   const [currentTab, setCurrentTab] = useState(0);
   const [rawMarkdown, setRawMarkdown] = useState("");
-  const [weekData, setWeekData] = useState<WeekSchema>({
-    id: "",
-    lesson_number: 1,
-    title: "",
-    week_range: {
-      start: "",
-      end: "",
-    },
-    memory_verse: {
-      text: "",
-      reference: "",
-    },
-    days: [
-      {
-        day: "Sábado",
-        date: "",
-        type: "introduction" as DayType,
-        title: "Introducción",
-        rawMarkdown: "",
-      },
-      {
-        day: "Domingo",
-        date: "",
-        type: "devotional" as DayType,
-        title: "",
-        rawMarkdown: "",
-      },
-      {
-        day: "Lunes",
-        date: "",
-        type: "devotional" as DayType,
-        title: "",
-        rawMarkdown: "",
-      },
-      {
-        day: "Martes",
-        date: "",
-        type: "devotional" as DayType,
-        title: "",
-        rawMarkdown: "",
-      },
-      {
-        day: "Miércoles",
-        date: "",
-        type: "devotional" as DayType,
-        title: "",
-        rawMarkdown: "",
-      },
-      {
-        day: "Jueves",
-        date: "",
-        type: "devotional" as DayType,
-        title: "",
-        rawMarkdown: "",
-      },
-      {
-        day: "Viernes",
-        date: "",
-        type: "review" as DayType,
-        title: "PARA ESTUDIAR Y MEDITAR",
-        rawMarkdown: "",
-      },
-    ],
+  const [weekData, setWeekData] = useState<WeekSchema>(() => {
+    const stored = localStorage.getItem("weekData");
+    if (stored) {
+      try {
+        return JSON.parse(stored);
+      } catch {
+        return defaultWeekData;
+      }
+    }
+    return defaultWeekData;
   });
+
+  // Load rawMarkdown from localStorage on mount
+  useEffect(() => {
+    const storedMarkdown = localStorage.getItem("rawMarkdown");
+    if (storedMarkdown) {
+      setRawMarkdown(storedMarkdown);
+    }
+  }, []);
+
+  // Store weekData to localStorage on every update
+  useEffect(() => {
+    localStorage.setItem("weekData", JSON.stringify(weekData));
+  }, [weekData]);
 
   const [isLoading, setIsLoading] = useState(false);
   const [notification, setNotification] = useState<{
@@ -141,7 +173,12 @@ export default function App() {
   const handleFileUpload = useCallback(
     (content: string, filename: string) => {
       try {
-        setRawMarkdown(content);
+        const modifiedContent = content
+          .split("\n\n")
+          .map((chunk) => chunk.replace(/\n/g, ""))
+          .join("\n\n");
+        setRawMarkdown(modifiedContent);
+        localStorage.setItem("rawMarkdown", modifiedContent);
 
         // Parse markdown content and extract lesson data
         let title = "";
@@ -166,13 +203,6 @@ export default function App() {
         // Parse markdown by headings and split into days
         const parsedSections = parseMarkdownByHeadings(content);
 
-        // Normalize content for better detection
-        const normalize = (text: string) =>
-          text
-            .normalize("NFD")
-            .replace(/[\u0300-\u036f]/g, "")
-            .toLowerCase();
-
         // Create a lookup of parsed sections by day
         const daySections: Record<string, { title: string; content: string }> =
           {};
@@ -187,8 +217,6 @@ export default function App() {
           }
         });
 
-        console.log("daySections", daySections);
-
         const updatedDays = weekData.days.map((day) => {
           const match = daySections[day.day];
           return match
@@ -196,15 +224,19 @@ export default function App() {
             : { ...day };
         });
 
-        setWeekData((prev) => ({
-          ...prev,
-          title,
-          memory_verse: {
-            text: memoryVerse,
-            reference: memoryReference,
-          },
-          days: updatedDays,
-        }));
+        setWeekData((prev) => {
+          const newWeekData = {
+            ...prev,
+            title,
+            memory_verse: {
+              text: memoryVerse,
+              reference: memoryReference,
+            },
+            days: updatedDays,
+          };
+          localStorage.setItem("weekData", JSON.stringify(newWeekData));
+          return newWeekData;
+        });
 
         setNotification({
           open: true,
@@ -334,7 +366,7 @@ export default function App() {
   }, [weekData, validateWeekData]);
 
   const totalDaysWithContent = weekData.days.filter((day) =>
-    day.rawMarkdown.trim()
+    day?.rawMarkdown?.trim()
   ).length;
 
   return (
@@ -423,6 +455,9 @@ export default function App() {
             minHeight: "200px",
           }}
         >
+          <Typography variant="h6" gutterBottom>
+            Raw Markdown Content - Complete Lesson
+          </Typography>
           <TextField
             fullWidth
             multiline

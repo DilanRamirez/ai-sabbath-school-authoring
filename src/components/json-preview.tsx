@@ -31,6 +31,9 @@ export function JsonPreview({ weekData, validationErrors }: JsonPreviewProps) {
 
   const jsonString = JSON.stringify(weekData, null, 2);
   const isValid = validationErrors.length === 0;
+  const daysWithContent = weekData.days.filter((day) =>
+    day?.rawMarkdown?.trim()
+  ).length;
 
   return (
     <Box>
@@ -115,13 +118,7 @@ export function JsonPreview({ weekData, validationErrors }: JsonPreviewProps) {
                 label={`Lesson ${weekData.lesson_number}`}
                 color="primary"
               />
-              <Chip label={`${weekData.days.length} days`} />
-              <Chip
-                label={`${weekData.days.reduce(
-                  (sum, day) => sum + day.sections.length,
-                  0
-                )} total sections`}
-              />
+              <Chip label={`${daysWithContent}/7 days with content`} />
               <Chip
                 label={
                   weekData.memory_verse.text
@@ -129,6 +126,10 @@ export function JsonPreview({ weekData, validationErrors }: JsonPreviewProps) {
                     : "No memory verse"
                 }
                 color={weekData.memory_verse.text ? "success" : "default"}
+              />
+              <Chip
+                label={weekData.title ? "Title set" : "No title"}
+                color={weekData.title ? "success" : "default"}
               />
             </Box>
           </AccordionDetails>

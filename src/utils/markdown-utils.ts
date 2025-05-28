@@ -18,7 +18,10 @@ export function parseMarkdownByHeadings(markdown: string): ParsedSection[] {
     if (headingMatch) {
       // Save the previous section before starting a new one
       if (currentSection) {
-        currentSection.content = currentContent.join("\n").trim();
+        currentSection.content = currentContent
+          .join("\n")
+          .replace(/\n(?!\n)/g, " ")
+          .trim();
         sections.push(currentSection);
       }
 
@@ -42,7 +45,10 @@ export function parseMarkdownByHeadings(markdown: string): ParsedSection[] {
 
   // Push the last section if exists
   if (currentSection) {
-    currentSection.content = currentContent.join("\n").trim();
+    currentSection.content = currentContent
+      .join("\n")
+      .replace(/\n(?!\n)/g, " ")
+      .trim();
     sections.push(currentSection);
   }
 

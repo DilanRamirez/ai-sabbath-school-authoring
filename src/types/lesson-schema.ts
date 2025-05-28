@@ -9,18 +9,18 @@ export type SectionType =
 export interface ReadingSection {
   type: "reading";
   label: string;
-  references: string[];
+  references?: string[];
 }
 
 export interface MemoryVerseSection {
   type: "memory_verse";
   label: string;
-  content: string;
+  content?: string;
 }
 
 export interface ParagraphSection {
   type: "paragraph";
-  content: string;
+  content?: string;
 }
 
 export interface BibleQuestionSection {
@@ -38,7 +38,7 @@ export interface QuoteSection {
 
 export interface DiscussionQuestionsSection {
   type: "discussion_questions";
-  questions: string[];
+  questions?: string[];
 }
 
 export type Section =
@@ -56,7 +56,8 @@ export interface Day {
   date: string;
   type: DayType;
   title: string;
-  rawMarkdown: string;
+  sections: Section[];
+  rawMarkdown?: string;
 }
 
 export interface MemoryVerse {

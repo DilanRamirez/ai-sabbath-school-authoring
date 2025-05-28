@@ -37,10 +37,9 @@ export function ExportControls({
   weekData,
 }: ExportControlsProps) {
   const isValid = validationErrors.length === 0;
-  const totalSections = weekData.days.reduce(
-    (sum, day) => sum + day.sections.length,
-    0
-  );
+  const daysWithContent = weekData.days.filter((day) =>
+    day?.rawMarkdown?.trim()
+  ).length;
 
   return (
     <Box>
@@ -62,7 +61,7 @@ export function ExportControls({
       )}
 
       <Grid container spacing={3}>
-        <Grid item xs={12} md={6}>
+        <Grid>
           <Card>
             <CardContent>
               <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
@@ -79,8 +78,7 @@ export function ExportControls({
                   size="small"
                   color="primary"
                 />
-                <Chip label={`${weekData.days.length} days`} size="small" />
-                <Chip label={`${totalSections} sections`} size="small" />
+                <Chip label={`${daysWithContent}/7 days`} size="small" />
                 <Chip
                   label={isValid ? "Valid" : "Has errors"}
                   size="small"
@@ -100,7 +98,7 @@ export function ExportControls({
                 variant="contained"
                 startIcon={<Download />}
                 onClick={onExportJSON}
-                disabled={totalSections === 0}
+                disabled={daysWithContent === 0}
                 fullWidth
               >
                 Export JSON
@@ -109,7 +107,7 @@ export function ExportControls({
           </Card>
         </Grid>
 
-        <Grid item xs={12} md={6}>
+        <Grid>
           <Card>
             <CardContent>
               <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
@@ -117,8 +115,8 @@ export function ExportControls({
                 <Typography variant="h6">Submit to Backend</Typography>
               </Box>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                Send the week schema to the FastAPI backend for persistence and
-                RAG indexing.
+                Send the week schema to the backend for persistence and
+                processing.
               </Typography>
               <Typography variant="caption" color="text.secondary">
                 Endpoint: POST /api/v1/lessons
@@ -130,7 +128,7 @@ export function ExportControls({
                 color="success"
                 startIcon={<Send />}
                 onClick={onSubmitToBackend}
-                disabled={!isValid || totalSections === 0 || isLoading}
+                disabled={!isValid || daysWithContent === 0 || isLoading}
                 fullWidth
               >
                 {isLoading ? "Submitting..." : "Submit to Backend"}
