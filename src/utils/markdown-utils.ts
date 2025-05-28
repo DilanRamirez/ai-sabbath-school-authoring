@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import type { WeekSchema } from "../types/lesson-schema";
+
 export interface ParsedSection {
   title: string;
   content: string;
@@ -86,4 +89,96 @@ export function extractDateFromContent(content: string): string {
   }
 
   return "";
+}
+
+export function sanitizeWeekData(data: WeekSchema): WeekSchema {
+  const cleanDays = data.days.map((day) => ({
+    ...day,
+    sections: day.sections?.map((section) => {
+      const { type } = section;
+      if (type === "paragraph") {
+        return { type, content: section.content };
+      }
+      if (type === "bible_question") {
+        return { type, label: section.label, question: section.question };
+      }
+      if (type === "quote") {
+        return {
+          type,
+          author: section.author,
+          source: section.source,
+          content: section.content,
+        };
+      }
+      if (type === "reading") {
+        return { type, label: section.label, references: section.references };
+      }
+      if (type === "memory_verse") {
+        return { type, label: section.label, content: section.content };
+      }
+      if (type === "discussion_questions") {
+        return { type, questions: section.questions };
+      }
+      return section;
+    }),
+  }));
+
+  return { ...data, days: cleanDays };
+}
+
+export function cleanMarkdownText(text: string | undefined): string {
+  return (text || "")
+    .replace(/[#*_`~>-]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+export function sanitizeWeekDataDownload(data: WeekSchema): WeekSchema {
+  const cleanDays = data.days.map((day) => ({
+    ...day,
+    title: cleanMarkdownText(day.title),
+    sections: day.sections?.map((section) => {
+      const { type } = section;
+      if (type === "paragraph") {
+        return { type, content: cleanMarkdownText((section as any).content) };
+      }
+      if (type === "bible_question") {
+        return {
+          type,
+          label: cleanMarkdownText((section as any).label),
+          question: cleanMarkdownText((section as any).question),
+        };
+      }
+      if (type === "quote") {
+        return {
+          type,
+          author: cleanMarkdownText((section as any).author),
+          source: cleanMarkdownText((section as any).source),
+          content: cleanMarkdownText((section as any).content),
+        };
+      }
+      if (type === "reading") {
+        return {
+          type,
+          label: cleanMarkdownText((section as any).label),
+          references: (section as any).references?.map(cleanMarkdownText),
+        };
+      }
+      if (type === "memory_verse") {
+        return {
+          type,
+          label: cleanMarkdownText((section as any).label),
+          content: cleanMarkdownText((section as any).content),
+        };
+      }
+      if (type === "discussion_questions") {
+        return {
+          type,
+          questions: (section as any).questions?.map(cleanMarkdownText),
+        };
+      }
+      return section;
+    }),
+  }));
+  return { ...data, days: cleanDays };
 }

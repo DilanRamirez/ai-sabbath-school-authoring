@@ -41,13 +41,19 @@ export interface DiscussionQuestionsSection {
   questions?: string[];
 }
 
+export interface ReflectionSection {
+  type: "reflection";
+  references?: string[];
+  content?: string[];
+}
 export type Section =
   | ReadingSection
   | MemoryVerseSection
   | ParagraphSection
   | BibleQuestionSection
   | QuoteSection
-  | DiscussionQuestionsSection;
+  | DiscussionQuestionsSection
+  | ReflectionSection;
 
 export type DayType = "introduction" | "devotional" | "review";
 

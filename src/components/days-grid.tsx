@@ -394,8 +394,49 @@ export function DaysGrid({ weekData, onUpdateWeekData }: DaysGridProps) {
                                 <MenuItem value="discussion_questions">
                                   Discussion Questions
                                 </MenuItem>
+                                <MenuItem value="reflection">
+                                  Reflection
+                                </MenuItem>
                               </Select>
                             </FormControl>
+
+                            {section.type === "reflection" && (
+                              <>
+                                <TextField
+                                  fullWidth
+                                  label="Bible Reference"
+                                  value={section.label || ""}
+                                  onChange={(e) => {
+                                    const newDays = [...weekData.days];
+                                    newDays[dayIndex].sections[
+                                      sectionIndex
+                                    ].label = e.target.value;
+                                    onUpdateWeekData({
+                                      ...weekData,
+                                      days: newDays,
+                                    });
+                                  }}
+                                  sx={{ mb: 1 }}
+                                />
+                                <TextField
+                                  fullWidth
+                                  label="Content"
+                                  value={section.content || ""}
+                                  multiline
+                                  rows={3}
+                                  onChange={(e) => {
+                                    const newDays = [...weekData.days];
+                                    newDays[dayIndex].sections[
+                                      sectionIndex
+                                    ].content = e.target.value;
+                                    onUpdateWeekData({
+                                      ...weekData,
+                                      days: newDays,
+                                    });
+                                  }}
+                                />
+                              </>
+                            )}
 
                             {section.type === "bible_question" && (
                               <>

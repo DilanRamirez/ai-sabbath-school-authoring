@@ -1,5 +1,3 @@
-"use client";
-
 import { useState } from "react";
 import {
   Paper,
@@ -14,6 +12,7 @@ import {
 } from "@mui/material";
 import { ChevronDown, Copy, CheckCircle, AlertCircle } from "lucide-react";
 import type { WeekSchema } from "../types/lesson-schema";
+import { sanitizeWeekData } from "../utils/markdown-utils";
 
 interface JsonPreviewProps {
   weekData: WeekSchema;
@@ -24,12 +23,13 @@ export function JsonPreview({ weekData, validationErrors }: JsonPreviewProps) {
   const [copied, setCopied] = useState(false);
 
   const copyToClipboard = () => {
-    navigator.clipboard.writeText(JSON.stringify(weekData, null, 2));
+    const cleanData = sanitizeWeekData(weekData);
+    navigator.clipboard.writeText(JSON.stringify(cleanData, null, 2));
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const jsonString = JSON.stringify(weekData, null, 2);
+  const jsonString = JSON.stringify(sanitizeWeekData(weekData), null, 2);
   const isValid = validationErrors.length === 0;
   const daysWithContent = weekData.days.filter((day) =>
     day?.rawMarkdown?.trim()

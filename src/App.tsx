@@ -24,11 +24,12 @@ import { DaysGrid } from "./components/days-grid";
 import { JsonPreview } from "./components/json-preview";
 import { FileUpload } from "./components/file-upload";
 import { ExportControls } from "./components/export-controls";
-import type { WeekSchema, DayType } from "./types/lesson-schema";
+import type { WeekSchema } from "./types/lesson-schema";
 import { mockApiService } from "./services/api";
 import {
   detectDayFromContent,
   parseMarkdownByHeadings,
+  sanitizeWeekDataDownload,
 } from "./utils/markdown-utils";
 
 interface TabPanelProps {
@@ -312,8 +313,8 @@ export default function App() {
       });
       return;
     }
-
-    const blob = new Blob([JSON.stringify(weekData, null, 2)], {
+    const sanitized = sanitizeWeekDataDownload(weekData);
+    const blob = new Blob([JSON.stringify(sanitized, null, 2)], {
       type: "application/json",
     });
     const url = URL.createObjectURL(blob);
@@ -322,7 +323,6 @@ export default function App() {
     a.download = `lesson-${weekData.lesson_number}-week-${weekData.id}.json`;
     a.click();
     URL.revokeObjectURL(url);
-
     setNotification({
       open: true,
       message: "JSON exported successfully",
@@ -341,12 +341,10 @@ export default function App() {
       });
       return;
     }
-
     setIsLoading(true);
-
     try {
-      await mockApiService.submitLesson(weekData);
-
+      const sanitized = sanitizeWeekDataDownload(weekData);
+      await mockApiService.submitLesson(sanitized);
       setNotification({
         open: true,
         message: "Successfully submitted to backend",
