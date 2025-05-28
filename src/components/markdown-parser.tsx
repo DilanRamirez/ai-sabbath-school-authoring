@@ -55,7 +55,7 @@ const detectPotentialSections = (blocks: MarkdownBlock[]) => {
     confidence: number;
   }> = [];
 
-  blocks.forEach((block, index) => {
+  blocks.forEach((block) => {
     const content = block.content.toLowerCase();
 
     // Memory verse detection
@@ -109,7 +109,6 @@ export function MarkdownParser({
 }: MarkdownParserProps) {
   const [splitMarkers, setSplitMarkers] = useState<SplitMarker[]>([]);
   const [showPreview, setShowPreview] = useState(false);
-  const [selectedHeading, setSelectedHeading] = useState<number | null>(null);
 
   // Parse markdown structure
   const parsedStructure = useMemo((): ParsedStructure => {
@@ -222,11 +221,6 @@ export function MarkdownParser({
   const autoSplit = useCallback(() => {
     const newMarkers: SplitMarker[] = [];
 
-    // Store H2 for potential lesson title (not split marker, but metadata)
-    const lessonTitleHeading = parsedStructure.headings.find(
-      (h) => h.level === 2
-    );
-
     // Create splits at H3 headings which indicate daily sections
     parsedStructure.headings.forEach((heading) => {
       if (heading.level === 3) {
@@ -322,7 +316,6 @@ export function MarkdownParser({
                 <ListItem key={index} disablePadding>
                   <ListItemButton
                     onClick={() => addSplitAtHeading(index)}
-                    selected={selectedHeading === index}
                     sx={{ py: 0.5 }}
                   >
                     <ListItemText

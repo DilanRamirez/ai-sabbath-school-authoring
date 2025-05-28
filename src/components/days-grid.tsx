@@ -27,7 +27,18 @@ import {
   CheckCircle,
   CalendarIcon,
 } from "lucide-react";
-import type { WeekSchema, Day, DayType } from "../types/lesson-schema";
+import type {
+  WeekSchema,
+  Day,
+  DayType,
+  ParagraphSection,
+  ReadingSection,
+  MemoryVerseSection,
+  QuoteSection,
+  DiscussionQuestionsSection,
+  BibleQuestionSection,
+  ReflectionSection,
+} from "../types/lesson-schema";
 
 interface DaysGridProps {
   weekData: WeekSchema;
@@ -385,7 +396,14 @@ export function DaysGrid({ weekData, onUpdateWeekData }: DaysGridProps) {
                                   const newDays = [...weekData.days];
                                   newDays[dayIndex].sections[
                                     sectionIndex
-                                  ].type = e.target.value;
+                                  ].type = e.target.value as
+                                    | "reading"
+                                    | "memory_verse"
+                                    | "paragraph"
+                                    | "bible_question"
+                                    | "quote"
+                                    | "discussion_questions"
+                                    | "reflection";
                                   onUpdateWeekData({
                                     ...weekData,
                                     days: newDays,
@@ -415,12 +433,14 @@ export function DaysGrid({ weekData, onUpdateWeekData }: DaysGridProps) {
                                 <TextField
                                   fullWidth
                                   label="Bible Reference"
-                                  value={section.label || ""}
+                                  value={section.references || ""}
                                   onChange={(e) => {
                                     const newDays = [...weekData.days];
-                                    newDays[dayIndex].sections[
-                                      sectionIndex
-                                    ].label = e.target.value;
+                                    (
+                                      newDays[dayIndex].sections[
+                                        sectionIndex
+                                      ] as ReflectionSection
+                                    ).references = e.target.value;
                                     onUpdateWeekData({
                                       ...weekData,
                                       days: newDays,
@@ -436,9 +456,11 @@ export function DaysGrid({ weekData, onUpdateWeekData }: DaysGridProps) {
                                   rows={3}
                                   onChange={(e) => {
                                     const newDays = [...weekData.days];
-                                    newDays[dayIndex].sections[
-                                      sectionIndex
-                                    ].content = e.target.value;
+                                    (
+                                      newDays[dayIndex].sections[
+                                        sectionIndex
+                                      ] as ReflectionSection
+                                    ).content = e.target.value;
                                     onUpdateWeekData({
                                       ...weekData,
                                       days: newDays,
@@ -456,9 +478,11 @@ export function DaysGrid({ weekData, onUpdateWeekData }: DaysGridProps) {
                                   value={section.label || ""}
                                   onChange={(e) => {
                                     const newDays = [...weekData.days];
-                                    newDays[dayIndex].sections[
-                                      sectionIndex
-                                    ].label = e.target.value;
+                                    (
+                                      newDays[dayIndex].sections[
+                                        sectionIndex
+                                      ] as BibleQuestionSection
+                                    ).label = e.target.value;
                                     onUpdateWeekData({
                                       ...weekData,
                                       days: newDays,
@@ -472,9 +496,11 @@ export function DaysGrid({ weekData, onUpdateWeekData }: DaysGridProps) {
                                   value={section.question || ""}
                                   onChange={(e) => {
                                     const newDays = [...weekData.days];
-                                    newDays[dayIndex].sections[
-                                      sectionIndex
-                                    ].question = e.target.value;
+                                    (
+                                      newDays[dayIndex].sections[
+                                        sectionIndex
+                                      ] as BibleQuestionSection
+                                    ).question = e.target.value;
                                     onUpdateWeekData({
                                       ...weekData,
                                       days: newDays,
@@ -493,9 +519,11 @@ export function DaysGrid({ weekData, onUpdateWeekData }: DaysGridProps) {
                                 rows={3}
                                 onChange={(e) => {
                                   const newDays = [...weekData.days];
-                                  newDays[dayIndex].sections[
-                                    sectionIndex
-                                  ].content = e.target.value;
+                                  (
+                                    newDays[dayIndex].sections[
+                                      sectionIndex
+                                    ] as ParagraphSection
+                                  ).content = e.target.value;
                                   onUpdateWeekData({
                                     ...weekData,
                                     days: newDays,
@@ -512,9 +540,11 @@ export function DaysGrid({ weekData, onUpdateWeekData }: DaysGridProps) {
                                   value={section.label || ""}
                                   onChange={(e) => {
                                     const newDays = [...weekData.days];
-                                    newDays[dayIndex].sections[
-                                      sectionIndex
-                                    ].label = e.target.value;
+                                    (
+                                      newDays[dayIndex].sections[
+                                        sectionIndex
+                                      ] as ReadingSection
+                                    ).label = e.target.value;
                                     onUpdateWeekData({
                                       ...weekData,
                                       days: newDays,
@@ -525,16 +555,23 @@ export function DaysGrid({ weekData, onUpdateWeekData }: DaysGridProps) {
                                 <TextField
                                   fullWidth
                                   label="References (comma-separated)"
-                                  value={section.references?.join(", ") || ""}
+                                  value={
+                                    (
+                                      (section as ReadingSection).references ||
+                                      []
+                                    ).join(", ") || ""
+                                  }
                                   onChange={(e) => {
                                     const refs = e.target.value
                                       .split(",")
                                       .map((ref) => ref.trim())
                                       .filter(Boolean);
                                     const newDays = [...weekData.days];
-                                    newDays[dayIndex].sections[
-                                      sectionIndex
-                                    ].references = refs;
+                                    (
+                                      newDays[dayIndex].sections[
+                                        sectionIndex
+                                      ] as ReadingSection
+                                    ).references = refs;
                                     onUpdateWeekData({
                                       ...weekData,
                                       days: newDays,
@@ -552,9 +589,11 @@ export function DaysGrid({ weekData, onUpdateWeekData }: DaysGridProps) {
                                   value={section.label || ""}
                                   onChange={(e) => {
                                     const newDays = [...weekData.days];
-                                    newDays[dayIndex].sections[
-                                      sectionIndex
-                                    ].label = e.target.value;
+                                    (
+                                      newDays[dayIndex].sections[
+                                        sectionIndex
+                                      ] as MemoryVerseSection
+                                    ).label = e.target.value;
                                     onUpdateWeekData({
                                       ...weekData,
                                       days: newDays,
@@ -570,9 +609,11 @@ export function DaysGrid({ weekData, onUpdateWeekData }: DaysGridProps) {
                                   rows={2}
                                   onChange={(e) => {
                                     const newDays = [...weekData.days];
-                                    newDays[dayIndex].sections[
-                                      sectionIndex
-                                    ].content = e.target.value;
+                                    (
+                                      newDays[dayIndex].sections[
+                                        sectionIndex
+                                      ] as MemoryVerseSection
+                                    ).content = e.target.value;
                                     onUpdateWeekData({
                                       ...weekData,
                                       days: newDays,
@@ -588,9 +629,11 @@ export function DaysGrid({ weekData, onUpdateWeekData }: DaysGridProps) {
                                   rows={2}
                                   onChange={(e) => {
                                     const newDays = [...weekData.days];
-                                    newDays[dayIndex].sections[
-                                      sectionIndex
-                                    ].reference = e.target.value;
+                                    (
+                                      newDays[dayIndex].sections[
+                                        sectionIndex
+                                      ] as MemoryVerseSection
+                                    ).reference = e.target.value;
                                     onUpdateWeekData({
                                       ...weekData,
                                       days: newDays,
@@ -608,9 +651,11 @@ export function DaysGrid({ weekData, onUpdateWeekData }: DaysGridProps) {
                                   value={section.author || ""}
                                   onChange={(e) => {
                                     const newDays = [...weekData.days];
-                                    newDays[dayIndex].sections[
-                                      sectionIndex
-                                    ].author = e.target.value;
+                                    (
+                                      newDays[dayIndex].sections[
+                                        sectionIndex
+                                      ] as QuoteSection
+                                    ).author = e.target.value;
                                     onUpdateWeekData({
                                       ...weekData,
                                       days: newDays,
@@ -624,9 +669,11 @@ export function DaysGrid({ weekData, onUpdateWeekData }: DaysGridProps) {
                                   value={section.source || ""}
                                   onChange={(e) => {
                                     const newDays = [...weekData.days];
-                                    newDays[dayIndex].sections[
-                                      sectionIndex
-                                    ].source = e.target.value;
+                                    (
+                                      newDays[dayIndex].sections[
+                                        sectionIndex
+                                      ] as QuoteSection
+                                    ).source = e.target.value;
                                     onUpdateWeekData({
                                       ...weekData,
                                       days: newDays,
@@ -642,9 +689,11 @@ export function DaysGrid({ weekData, onUpdateWeekData }: DaysGridProps) {
                                   rows={3}
                                   onChange={(e) => {
                                     const newDays = [...weekData.days];
-                                    newDays[dayIndex].sections[
-                                      sectionIndex
-                                    ].content = e.target.value;
+                                    (
+                                      newDays[dayIndex].sections[
+                                        sectionIndex
+                                      ] as QuoteSection
+                                    ).content = e.target.value;
                                     onUpdateWeekData({
                                       ...weekData,
                                       days: newDays,
@@ -663,9 +712,11 @@ export function DaysGrid({ weekData, onUpdateWeekData }: DaysGridProps) {
                                 value={(section.questions || []).join("\n")}
                                 onChange={(e) => {
                                   const newDays = [...weekData.days];
-                                  newDays[dayIndex].sections[
-                                    sectionIndex
-                                  ].questions = e.target.value
+                                  (
+                                    newDays[dayIndex].sections[
+                                      sectionIndex
+                                    ] as DiscussionQuestionsSection
+                                  ).questions = e.target.value
                                     .split("\n")
                                     .map((q) => q.trim())
                                     .filter(Boolean);
