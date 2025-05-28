@@ -13,8 +13,8 @@ import {
   LinearProgress,
 } from "@mui/material";
 import { Upload, FileText, Code, FileImage } from "lucide-react";
-import { mockApiService } from "../services/api";
 import { data } from "./data";
+import { parsePdf } from "./api/api";
 
 interface FileUploadProps {
   onFileUpload: (content: string, filename: string) => void;
@@ -48,8 +48,9 @@ export function FileUpload({ onFileUpload, onJsonImport }: FileUploadProps) {
         // Handle PDF upload - convert to Markdown via API
         setIsProcessing(true);
         try {
-          const result = await mockApiService.convertPdfToMarkdown(file);
-          onFileUpload(result.markdown, `${file.name} (converted to Markdown)`);
+          const result = await parsePdf(file);
+          console.log("PDF converted to Markdown:", result);
+          onFileUpload(result, `${file.name} (converted to Markdown)`);
           setError(null);
         } catch (error) {
           setError(

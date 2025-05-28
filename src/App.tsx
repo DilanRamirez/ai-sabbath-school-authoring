@@ -174,6 +174,10 @@ export default function App() {
   const handleFileUpload = useCallback(
     (content: string, filename: string) => {
       try {
+        // delete previous rawMarkdown from localStorage
+        localStorage.removeItem("rawMarkdown");
+        localStorage.removeItem("weekData");
+
         const modifiedContent = content
           .split("\n\n")
           .map((chunk) => chunk.replace(/\n/g, ""))
@@ -218,24 +222,24 @@ export default function App() {
           }
         });
 
-        const updatedDays = weekData.days.map((day) => {
-          const match = daySections[day.day];
-          return match
-            ? { ...day, title: match.title, rawMarkdown: match.content }
-            : { ...day };
-        });
-
-        setWeekData((prev) => {
-          const newWeekData = {
-            ...prev,
+        setWeekData(() => {
+          // Start from a fresh default template for a new import
+          const freshDays = defaultWeekData.days.map((day) => {
+            const match = daySections[day.day];
+            if (match) {
+              return { ...day, title: match.title, rawMarkdown: match.content };
+            }
+            // No content for this day yet
+            return { ...day, title: "", rawMarkdown: "", sections: [] };
+          });
+          const newWeekData: WeekSchema = {
+            ...defaultWeekData,
             title,
-            memory_verse: {
-              text: memoryVerse,
-              reference: memoryReference,
-            },
-            days: updatedDays,
+            memory_verse: { text: memoryVerse, reference: memoryReference },
+            days: freshDays,
           };
           localStorage.setItem("weekData", JSON.stringify(newWeekData));
+          console.log("Loaded new week data:", newWeekData);
           return newWeekData;
         });
 
