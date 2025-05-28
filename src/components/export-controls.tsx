@@ -43,10 +43,6 @@ export function ExportControls({
 
   return (
     <Box>
-      <Typography variant="h6" gutterBottom>
-        Export & Submit
-      </Typography>
-
       {!isValid && (
         <Alert severity="warning" sx={{ mb: 3 }}>
           <Typography variant="subtitle2" gutterBottom>
@@ -61,7 +57,7 @@ export function ExportControls({
       )}
 
       <Grid container spacing={3}>
-        <Grid>
+        <Grid item xs={12} md={6}>
           <Card>
             <CardContent>
               <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
@@ -107,7 +103,7 @@ export function ExportControls({
           </Card>
         </Grid>
 
-        <Grid>
+        <Grid item xs={12} md={6}>
           <Card>
             <CardContent>
               <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>

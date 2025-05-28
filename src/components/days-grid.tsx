@@ -116,15 +116,25 @@ export function DaysGrid({ weekData, onUpdateWeekData }: DaysGridProps) {
                     <Box
                       sx={{
                         display: "flex",
+                        flexDirection: { xs: "column", sm: "row" },
                         alignItems: "center",
                         justifyContent: "space-between",
+                        p: 1,
                       }}
                     >
-                      <Typography variant="h6">
+                      <Typography
+                        variant="h6"
+                        sx={{ textAlign: { xs: "center", sm: "left" } }}
+                      >
                         {day.day} - {day.title || "Untitled"}
                       </Typography>
                       <Box
-                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 1,
+                          mt: { xs: 1, sm: 0 },
+                        }}
                       >
                         <Chip
                           label={day.type}

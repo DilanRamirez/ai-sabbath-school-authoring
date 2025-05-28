@@ -8,7 +8,7 @@ interface PreviewPaneProps {
 
 const PreviewPane: React.FC<PreviewPaneProps> = ({ content }) => (
   <Paper elevation={3} sx={{ p: 2, flex: 1, overflowY: "auto" }}>
-    <Box>
+    <Box sx={{ maxHeight: "30vh", overflowY: "auto" }}>
       <ReactMarkdown>{content}</ReactMarkdown>
     </Box>
   </Paper>

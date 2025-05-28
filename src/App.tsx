@@ -414,23 +414,52 @@ export default function App() {
   return (
     <Box sx={{ flexGrow: 1, minHeight: "100vh", bgcolor: "grey.50" }}>
       <AppBar position="static" elevation={1}>
-        <Toolbar>
-          <Calendar className="mr-2" />
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            Sabbath School Authoring Tool
-          </Typography>
-          <Chip
-            label={`Lesson ${weekData.lesson_number}`}
-            color="secondary"
-            variant="outlined"
-            sx={{ color: "white", borderColor: "white", mr: 1 }}
-          />
-          <Chip
-            label={`${totalDaysWithContent}/7 days`}
-            color="secondary"
-            variant="outlined"
-            sx={{ color: "white", borderColor: "white" }}
-          />
+        <Toolbar variant="dense">
+          <Grid
+            container
+            alignItems="center"
+            spacing={1}
+            sx={{ flexWrap: "wrap" }}
+          >
+            <Grid item xs>
+              <Typography
+                variant="h6"
+                component="div"
+                sx={{
+                  flexGrow: 1,
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  mt: 2,
+                  mb: 2,
+                }}
+              >
+                Sabbath School Authoring Tool
+              </Typography>
+            </Grid>
+            <Grid item sx={{ display: "flex", justifyContent: "flex-end" }}>
+              <Chip
+                label={`Lesson ${weekData.lesson_number}`}
+                color="secondary"
+                variant="outlined"
+                sx={{
+                  color: "white",
+                  borderColor: "white",
+                  mr: { xs: 0.5, sm: 1 },
+                  mb: { xs: 0.5, sm: 0 },
+                }}
+              />
+              <Chip
+                label={`${totalDaysWithContent}/7 days`}
+                color="secondary"
+                variant="outlined"
+                sx={{
+                  color: "white",
+                  borderColor: "white",
+                }}
+              />
+            </Grid>
+          </Grid>
         </Toolbar>
       </AppBar>
 
