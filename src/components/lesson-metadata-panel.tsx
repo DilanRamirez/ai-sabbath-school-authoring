@@ -98,7 +98,9 @@ function LessonMetadataPanelComponent({
               label="Lesson Title"
               aria-label="Lesson Title"
               value={weekData.title}
-              onChange={(e) => handleFieldUpdate("title", e.target.value)}
+              onChange={(e) => {
+                handleFieldUpdate("title", e.target.value);
+              }}
               required
               InputProps={{
                 startAdornment: (
@@ -146,7 +148,14 @@ function LessonMetadataPanelComponent({
               label="Quarter"
               aria-label="Quarter"
               value={weekData.quarter}
-              onChange={(e) => handleFieldUpdate("quarter", e.target.value)}
+              onChange={(e) => {
+                const sanitizedValue = e.target.value
+                  .replace(/\s+/g, "-")
+                  .replace(/[^A-Za-z0-9-]/g, "")
+                  .toLowerCase();
+                console.log("Sanitized Value:", sanitizedValue);
+                handleFieldUpdate("quarter", sanitizedValue);
+              }}
             />
             <TextField
               fullWidth
