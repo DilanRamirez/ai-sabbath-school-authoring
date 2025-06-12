@@ -1,7 +1,14 @@
 "use client";
 
 import type React from "react";
-import { useState, useCallback, useEffect } from "react";
+import {
+  useState,
+  useCallback,
+  useMemo,
+  Suspense,
+  lazy,
+  useEffect,
+} from "react";
 const LAYOUT_SPACING = 2;
 import {
   Box,
@@ -32,7 +39,39 @@ import {
 } from "./utils/markdown-utils";
 import { importLesson } from "./components/api/api";
 import JsonImport from "./components/json-import";
-import PreviewPane from "./components/preview-pane";
+import { AutoAwesome } from "@mui/icons-material";
+import SummaryTab from "./components/lesson-ai-summary";
+const PreviewPane = lazy(() => import("./components/preview-pane"));
+/**
+ * Hook: Syncs a state value to localStorage with a debounce.
+ * @param key localStorage key
+ * @param initialValue initial state
+ * @param delay debounce delay in ms
+ */
+function useDebouncedLocalStorage<T>(
+  key: string,
+  initialValue: T,
+  delay = 300
+) {
+  const [value, setValue] = useState<T>(() => {
+    const stored = localStorage.getItem(key);
+    if (stored) {
+      try {
+        return JSON.parse(stored) as T;
+      } catch {
+        localStorage.removeItem(key);
+      }
+    }
+    return initialValue;
+  });
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      localStorage.setItem(key, JSON.stringify(value));
+    }, delay);
+    return () => clearTimeout(handler);
+  }, [key, value, delay]);
+  return [value, setValue] as const;
+}
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -125,35 +164,16 @@ const defaultWeekData: WeekSchema = {
 
 export default function App() {
   const [currentTab, setCurrentTab] = useState(0);
-  const [rawMarkdown, setRawMarkdown] = useState("");
-  const [weekData, setWeekData] = useState<WeekSchema>(() => {
-    const stored = localStorage.getItem("weekData");
-    if (stored) {
-      try {
-        return JSON.parse(stored);
-      } catch {
-        return defaultWeekData;
-      }
-    }
-    return defaultWeekData;
-  });
-
+  const [rawMarkdown, setRawMarkdown] = useDebouncedLocalStorage<string>(
+    "rawMarkdown",
+    ""
+  );
+  const [weekData, setWeekData] = useDebouncedLocalStorage<WeekSchema>(
+    "weekData",
+    defaultWeekData
+  );
   // New state for storing PDF file
   const [pdfFile, setPdfFile] = useState<File | null>(null);
-
-  // Load rawMarkdown from localStorage on mount
-  useEffect(() => {
-    const storedMarkdown = localStorage.getItem("rawMarkdown");
-    if (storedMarkdown) {
-      setRawMarkdown(storedMarkdown);
-    }
-  }, []);
-
-  // Store weekData to localStorage on every update
-  useEffect(() => {
-    localStorage.setItem("weekData", JSON.stringify(weekData));
-  }, [weekData]);
-
   const [isLoading, setIsLoading] = useState(false);
   const [notification, setNotification] = useState<{
     open: boolean;
@@ -165,38 +185,47 @@ export default function App() {
     severity: "info",
   });
 
-  const handleJsonPopulate = useCallback((importedData: WeekSchema) => {
-    setWeekData(importedData);
-    setNotification({
-      open: true,
-      message: "Lesson JSON imported successfully",
-      severity: "success",
-    });
-    setCurrentTab(1); // switch to the Days & Sections view
-  }, []);
+  const handleJsonPopulate = useCallback(
+    (importedData: WeekSchema) => {
+      setWeekData(importedData);
+      setNotification({
+        open: true,
+        message: "Lesson JSON imported successfully",
+        severity: "success",
+      });
+      setCurrentTab(1); // switch to the Days & Sections view
+    },
+    [setWeekData]
+  );
 
-  // Auto-generate ID from week end date
-  const updateWeekEndDate = useCallback((date: string) => {
-    setWeekData((prev) => ({
-      ...prev,
-      week_range: {
-        ...prev.week_range,
-        end: date,
-      },
-      id: date || "",
-    }));
-  }, []);
+  // Auto-generate ID from week end date (renamed and simplified)
+  const handleEndDateChange = useCallback(
+    (endDate: string) => {
+      if (!endDate) return;
+      setWeekData((prev) => ({
+        ...prev,
+        week_range: { ...prev.week_range, end: endDate },
+        id: endDate,
+      }));
+    },
+    [setWeekData]
+  );
 
-  // Handle file upload and parse content
+  /**
+   * Handles file upload, parsing, and updates state.
+   */
   const handleFileUpload = useCallback(
     (content: string, filename: string, file: File) => {
+      if (!content || !file) {
+        setNotification({
+          open: true,
+          message: "No file content found",
+          severity: "error",
+        });
+        return;
+      }
       try {
-        // Capture the uploaded PDF File reference
-        if (file) {
-          setPdfFile(file);
-        } else {
-          setPdfFile(null);
-        }
+        setPdfFile(file);
         // Remove any previous rawMarkdown and weekData
         localStorage.removeItem("rawMarkdown");
         localStorage.removeItem("weekData");
@@ -283,32 +312,39 @@ export default function App() {
         });
       }
     },
-    [weekData.days, pdfFile]
+    [setRawMarkdown, setWeekData]
   );
 
-  // Handle JSON import
-  const handleJsonImport = useCallback((jsonContent: string) => {
-    try {
-      const importedData: WeekSchema = JSON.parse(jsonContent);
-      setWeekData(importedData);
-      setNotification({
-        open: true,
-        message: "JSON lesson data imported successfully",
-        severity: "success",
-      });
-      setCurrentTab(1); // Switch to Days & Sections tab
-    } catch (error) {
-      setNotification({
-        open: true,
-        message: `Error importing JSON: ${
-          error instanceof Error ? error.message : "Invalid JSON"
-        }`,
-        severity: "error",
-      });
-    }
-  }, []);
+  /**
+   * Handles importing JSON content for a lesson.
+   */
+  const handleJsonImport = useCallback(
+    (jsonContent: string) => {
+      try {
+        const importedData: WeekSchema = JSON.parse(jsonContent);
+        setWeekData(importedData);
+        setNotification({
+          open: true,
+          message: "JSON lesson data imported successfully",
+          severity: "success",
+        });
+        setCurrentTab(1); // Switch to Days & Sections tab
+      } catch (error) {
+        setNotification({
+          open: true,
+          message: `Error importing JSON: ${
+            error instanceof Error ? error.message : "Invalid JSON"
+          }`,
+          severity: "error",
+        });
+      }
+    },
+    [setWeekData]
+  );
 
-  // Validate the current week data
+  /**
+   * Validates the current week data for required fields.
+   */
   const validateWeekData = useCallback(() => {
     const errors: string[] = [];
 
@@ -328,7 +364,9 @@ export default function App() {
     return errors;
   }, [weekData]);
 
-  // Export as JSON
+  /**
+   * Exports the lesson as a JSON file.
+   */
   const exportAsJSON = useCallback(() => {
     const errors = validateWeekData();
     if (errors.length > 0) {
@@ -356,7 +394,9 @@ export default function App() {
     });
   }, [weekData, validateWeekData]);
 
-  // Submit to backend
+  /**
+   * Submits the lesson and PDF to the backend API.
+   */
   const submitToBackend = useCallback(async () => {
     const errors = validateWeekData();
     if (errors.length > 0) {
@@ -367,16 +407,14 @@ export default function App() {
       });
       return;
     }
-
     if (!pdfFile) {
       setNotification({
         open: true,
-        message: "No PDF file selected. Please upload a PDF before submitting.",
+        message: "Upload a PDF before submitting.",
         severity: "error",
       });
       return;
     }
-
     setIsLoading(true);
     try {
       // Use the importLesson API helper
@@ -395,11 +433,12 @@ export default function App() {
         message: `Import successful: ${result.message}`,
         severity: "success",
       });
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (error: any) {
+    } catch (error) {
       setNotification({
         open: true,
-        message: `Import failed: ${error.message || "Unknown error"}`,
+        message: `Import failed: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`,
         severity: "error",
       });
     } finally {
@@ -407,9 +446,14 @@ export default function App() {
     }
   }, [weekData, validateWeekData, pdfFile]);
 
-  const totalDaysWithContent = weekData.days.filter((day) =>
-    day?.rawMarkdown?.trim()
-  ).length;
+  const totalDaysWithContent = useMemo(
+    () =>
+      weekData.days.reduce(
+        (count, day) => (day.rawMarkdown?.trim() ? count + 1 : count),
+        0
+      ),
+    [weekData.days]
+  );
 
   return (
     <Box sx={{ flexGrow: 1, minHeight: "100vh", bgcolor: "grey.50" }}>
@@ -471,13 +515,17 @@ export default function App() {
         >
           <Tabs
             value={currentTab}
-            onChange={(_, newValue) => setCurrentTab(newValue)}
+            onChange={(_, newValue) => {
+              console.log("Switching to tab:", newValue);
+              setCurrentTab(newValue);
+            }}
             variant="scrollable"
             scrollButtons="auto"
             aria-label="Responsive Tabs"
           >
             <Tab icon={<Upload />} label="Upload & Metadata" />
             <Tab icon={<Calendar />} label="Days & Sections" />
+            <Tab icon={<AutoAwesome />} label="Summary per Day" />
             <Tab icon={<Eye />} label="JSON Preview" />
             <Tab icon={<FileText />} label="Export & Submit" />
           </Tabs>
@@ -489,7 +537,7 @@ export default function App() {
               <LessonMetadataPanel
                 weekData={weekData}
                 onUpdateWeekData={setWeekData}
-                onUpdateWeekEndDate={updateWeekEndDate}
+                onUpdateWeekEndDate={handleEndDateChange}
               />
             </Grid>
             <Grid sx={{ width: "100%" }}>
@@ -508,13 +556,17 @@ export default function App() {
         </TabPanel>
 
         <TabPanel value={currentTab} index={2}>
+          <SummaryTab lesson={weekData} llmEndpoint={"llmEndpoint"} />
+        </TabPanel>
+
+        <TabPanel value={currentTab} index={3}>
           <JsonPreview
             weekData={weekData}
             validationErrors={validateWeekData()}
           />
         </TabPanel>
 
-        <TabPanel value={currentTab} index={3}>
+        <TabPanel value={currentTab} index={4}>
           <ExportControls
             onExportJSON={exportAsJSON}
             onSubmitToBackend={submitToBackend}
@@ -536,7 +588,9 @@ export default function App() {
           <Typography variant="h6" gutterBottom>
             Raw Markdown Content - Complete Lesson
           </Typography>
-          <PreviewPane content={rawMarkdown} />
+          <Suspense fallback={<LinearProgress />}>
+            <PreviewPane content={rawMarkdown} />
+          </Suspense>
         </Paper>
       </Container>
 
