@@ -58,15 +58,6 @@ export type Section =
 
 export type DayType = "introduction" | "devotional" | "review";
 
-export interface Day {
-  day: string;
-  date: string;
-  type: DayType;
-  title: string;
-  sections: Section[];
-  rawMarkdown?: string;
-}
-
 export interface MemoryVerse {
   text: string;
   reference: string;
@@ -75,6 +66,16 @@ export interface MemoryVerse {
 export interface WeekRange {
   start: string;
   end: string;
+}
+
+export interface Day {
+  day: string;
+  date: string;
+  type: DayType;
+  title: string;
+  sections: Section[];
+  daySummary?: DaySummary; // Optional summary for the day
+  rawMarkdown?: string;
 }
 
 export interface WeekSchema {
@@ -86,4 +87,36 @@ export interface WeekSchema {
   week_range: WeekRange;
   memory_verse: MemoryVerse;
   days: Day[];
+}
+
+// Interface representing a single day in the lesson
+export interface LessonDay {
+  day: string;
+  date: string;
+  type: string;
+  title: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  sections: any[]; // Adjust as needed for your sections shape
+}
+
+// Interface representing the entire lesson structure
+export interface LessonData {
+  id: string;
+  lesson_number: number;
+  title: string;
+  quarter: string;
+  year: number;
+  week_range: { start: string; end: string };
+  memory_verse: { text: string; reference: string };
+  days: LessonDay[];
+}
+
+// Interface for the summary structure returned by the LLM
+export interface DaySummary {
+  day: string;
+  date: string;
+  summary: string;
+  keyPoints: string[];
+  glossary: Record<string, string>;
+  citations: { reference: string }[];
 }

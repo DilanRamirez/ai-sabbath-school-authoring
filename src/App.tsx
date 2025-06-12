@@ -31,7 +31,7 @@ import { DaysGrid } from "./components/days-grid";
 import { JsonPreview } from "./components/json-preview";
 import { FileUpload } from "./components/file-upload";
 import { ExportControls } from "./components/export-controls";
-import type { WeekSchema } from "./types/lesson-schema";
+import type { DaySummary, WeekSchema } from "./types/lesson-schema";
 import {
   detectDayFromContent,
   parseMarkdownByHeadings,
@@ -172,6 +172,23 @@ export default function App() {
     "weekData",
     defaultWeekData
   );
+  const [summaries, setSummaries] = useState<DaySummary[]>([]);
+
+  // Sync LLM-generated summaries into weekData.days.daySummary
+  useEffect(() => {
+    if (summaries && summaries.length > 0) {
+      setWeekData((prevWeek) => {
+        const updatedDays = prevWeek.days.map((day) => {
+          const matching = summaries.find((s) => s.day === day.day);
+          return matching
+            ? { ...day, daySummary: matching }
+            : { ...day, daySummary: undefined };
+        });
+        return { ...prevWeek, days: updatedDays };
+      });
+    }
+  }, [summaries, setWeekData]);
+
   // New state for storing PDF file
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -556,7 +573,11 @@ export default function App() {
         </TabPanel>
 
         <TabPanel value={currentTab} index={2}>
-          <SummaryTab lesson={weekData} llmEndpoint={"llmEndpoint"} />
+          <SummaryTab
+            lesson={weekData}
+            setSummaries={setSummaries}
+            summaries={summaries}
+          />
         </TabPanel>
 
         <TabPanel value={currentTab} index={3}>
