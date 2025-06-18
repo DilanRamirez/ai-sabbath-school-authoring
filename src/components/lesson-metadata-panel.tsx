@@ -153,7 +153,6 @@ function LessonMetadataPanelComponent({
                   .replace(/\s+/g, "-")
                   .replace(/[^A-Za-z0-9-]/g, "")
                   .toLowerCase();
-                console.log("Sanitized Value:", sanitizedValue);
                 handleFieldUpdate("quarter", sanitizedValue);
               }}
             />

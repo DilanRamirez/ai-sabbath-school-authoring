@@ -1,13 +1,38 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import axios from "axios";
 import type { WeekSchema } from "../../types/lesson-schema";
+import type { LoginResponse } from "../../types/api";
 import { generateDaySummaryPrompt } from "../../services/prompts";
 
 const api = axios.create({
   // baseURL: "https://ai-sabbath-school-backend-production.up.railway.app/api/v1",
   baseURL: "http://0.0.0.0:8001/api/v1",
+  // baseURL:
+  //   "https://ai-sabbath-school-backend.mangomoss-c47d9f22.westus2.azurecontainerapps.io/api/v1",
 });
 
 export default api;
+
+/**
+ * Calls the backend login endpoint.
+ */
+// src/lib/api/auth.ts
+export async function loginUser(
+  email: string,
+  password: string
+): Promise<LoginResponse> {
+  try {
+    const response = await api.post("/auth/login", { email, password });
+    const { access_token, token_type } = response.data;
+    const token = `${token_type} ${access_token}`;
+    localStorage.setItem("authToken", token);
+    api.defaults.headers.common["Authorization"] = token;
+    return response.data;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || "Login failed");
+  }
+}
 
 /**
  * Uploads a PDF to the backend and returns the extracted Markdown.
@@ -18,9 +43,17 @@ export async function parsePdf(file: File): Promise<string> {
   const form = new FormData();
   form.append("file", file);
 
-  const response = await api.post<{ markdown: string }>("/llm/parser", form, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
+  const token = localStorage.getItem("authToken");
+  const response = await api.post<{ markdown: string }>(
+    "/parser/llm/parser",
+    form,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+        ...(token ? { Authorization: token } : {}),
+      },
+    }
+  );
 
   return response.data.markdown;
 }
@@ -67,8 +100,6 @@ export async function importLesson(
   };
   form.append("metadata", JSON.stringify(metadata));
 
-  console.log("Importing lesson with metadata:", metadata);
-
   const endpoint = `/lessons/${year}/${quarter}/lesson-${lessonNumber}/import`;
   const response = await api.post<{ status: string; message: string }>(
     endpoint,
@@ -85,29 +116,59 @@ export async function importLesson(
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function generateDaySummary(lesson: WeekSchema): Promise<any> {
-  // Construct a descriptive prompt for day-by-day summaries
+  // 1) build your prompt
   const promptPayload = {
     prompt: generateDaySummaryPrompt(lesson),
     mode: "summarize",
     lang: "es",
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // 2) call the API
+  const token = localStorage.getItem("authToken");
   const response = await api.post<{ response: string }>(
     "/prompt",
-    promptPayload
+    promptPayload,
+    { headers: token ? { Authorization: token } : {} }
   );
-  // Strip Markdown JSON code fences if present
-  let raw: string = response.data.response;
-  raw = raw.replace(/```json\s*/, "").replace(/\s*```$/, "");
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let parsed: any;
-  try {
-    parsed = JSON.parse(raw);
-  } catch {
-    console.warn("Failed to parse JSON, returning raw response.");
-    parsed = raw;
+
+  // 3) strip any ```json / ``` fences
+  let raw = response.data.response.trim();
+  if (raw.startsWith("```")) {
+    // remove opening fence
+    raw = raw.substring(raw.indexOf("\n") + 1);
+    // remove closing fence if present
+    if (raw.endsWith("```")) {
+      raw = raw.substring(0, raw.lastIndexOf("\n"));
+    }
+    raw = raw.trim();
   }
-  console.log("Generated summary:", parsed);
-  return parsed;
+
+  // 4) try to parse it (once or twice)
+  try {
+    const parsed = JSON.parse(raw);
+
+    // if it’s an object with a string “response” field, it might be doubly wrapped
+    if (
+      parsed &&
+      typeof parsed === "object" &&
+      "response" in parsed &&
+      typeof (parsed as any).response === "string"
+    ) {
+      try {
+        // parse the inner string
+        const inner = JSON.parse((parsed as any).response);
+        return inner;
+      } catch {
+        // not valid JSON inside, so just return the string
+        return (parsed as any).response;
+      }
+    }
+
+    // otherwise return the first parse
+    return parsed.response || parsed;
+  } catch (e) {
+    // give up and return the raw string
+    console.warn("generateDaySummary: failed to parse JSON:", raw, e);
+    return { raw };
+  }
 }

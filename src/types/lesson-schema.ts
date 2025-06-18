@@ -119,4 +119,34 @@ export interface DaySummary {
   keyPoints: string[];
   glossary: Record<string, string>;
   citations: { reference: string }[];
+  teachingGuide: TeachingGuide; // Detalles para guiar la enseñanza del día
+}
+
+export interface TeachingGuide {
+  intro: string; // Breve introducción espiritual al tema del día
+  key_verse?: string; // Texto bíblico clave que resume el enfoque del día
+
+  key_points: KeyPoint[]; // Lista de puntos clave que se desarrollan en la clase
+
+  mission_moment?: string; // Historia o testimonio para inspirar misión
+  community_activity?: string; // Dinámica grupal para fomentar compañerismo
+  call_to_action: string; // Llamado a aplicar el mensaje espiritualmente
+
+  suggested_flow?: {
+    opening: string; // Cómo iniciar la clase
+    study_block: string; // Cómo desarrollar el estudio principal
+    application: string; // Cómo conectar el contenido con la vida diaria
+    close: string; // Cómo cerrar con oración y reflexión
+  };
+}
+
+export interface KeyPoint {
+  title: string; // Título del punto clave
+  explanation: string; // Cómo explicarlo de forma clara al grupo
+  content: string; // Fragmento o idea original de la lección relacionado
+  illustration?: {
+    title: string; // Título o nombre del ejemplo visual
+    description: string; // Cómo se usa en la clase para ilustrar el punto
+  };
+  discussion_questions: string[]; // Preguntas específicas relacionadas con este punto
 }

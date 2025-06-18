@@ -533,7 +533,6 @@ export default function App() {
           <Tabs
             value={currentTab}
             onChange={(_, newValue) => {
-              console.log("Switching to tab:", newValue);
               setCurrentTab(newValue);
             }}
             variant="scrollable"

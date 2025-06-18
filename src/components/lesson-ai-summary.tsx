@@ -79,13 +79,14 @@ const SummaryTab: React.FC<SummaryTabProps> = ({
     setError(null);
     try {
       const data = await generateDaySummary(lesson);
+      console.log("Generated summaries:", data);
       setSummaries(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
       setLoading(false);
     }
-  }, [lesson]);
+  }, [lesson, setSummaries]);
 
   return (
     <Box p={2}>
